@@ -1,5 +1,6 @@
 package com.bytestream.services;
 
+import com.bytestream.config.UserMapper;
 import com.bytestream.dtos.UserDto;
 import com.bytestream.entities.User;
 import com.bytestream.repositories.UserRepository;
@@ -103,4 +104,4 @@ public class UserServiceImpl implements  UserService {
         return userMapper.dtoToEntity(userDto);
     }
 }
-}
+
