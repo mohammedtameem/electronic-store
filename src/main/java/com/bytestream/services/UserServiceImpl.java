@@ -1,5 +1,6 @@
 package com.bytestream.services;
 
+import com.bytestream.config.UserMapper;
 import com.bytestream.dtos.UserDto;
 import com.bytestream.entities.User;
 import com.bytestream.repositories.UserRepository;
@@ -13,6 +14,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements  UserService {
+
+    private final UserMapper userMapper = UserMapper.INSTANCE;
 
     @Autowired
     private UserRepository userRepository;
@@ -82,35 +85,43 @@ public class UserServiceImpl implements  UserService {
 
     }
 
+//     private UserDto entityToDTO(User user) {
+// //        UserDto userDto = UserDto.builder()
+// //                .userId(user.getUserId())
+// //                .name(user.getName())
+// //                .email(user.getEmail())
+// //                .gender(user.getGender())
+// //                .password(user.getPassword())
+// //                .about(user.getAbout())
+// //                .imageName(user.getImageName())
+// //                .build();
+// //        return userDto;
+
+//         return mapper.map(user, UserDto.class);
+
+//     }
+
+//     private User dtoToEntity(UserDto userDto) {
+// //        User user = User.builder()
+// //                .userId(userDto.getUserId())
+// //                .name(userDto.getName())
+// //                .email(userDto.getEmail())
+// //                .gender(userDto.getGender())
+// //                .password(userDto.getPassword())
+// //                .about(userDto.getAbout())
+// //                .imageName(userDto.getImageName())
+// //                .build();
+// //        return user;
+
+//         return mapper.map(userDto, User.class);
+
+//     }
+
     private UserDto entityToDTO(User user) {
-//        UserDto userDto = UserDto.builder()
-//                .userId(user.getUserId())
-//                .name(user.getName())
-//                .email(user.getEmail())
-//                .gender(user.getGender())
-//                .password(user.getPassword())
-//                .about(user.getAbout())
-//                .imageName(user.getImageName())
-//                .build();
-//        return userDto;
-
-        return mapper.map(user, UserDto.class);
-
+        return userMapper.entityToDTO(user);
     }
 
     private User dtoToEntity(UserDto userDto) {
-//        User user = User.builder()
-//                .userId(userDto.getUserId())
-//                .name(userDto.getName())
-//                .email(userDto.getEmail())
-//                .gender(userDto.getGender())
-//                .password(userDto.getPassword())
-//                .about(userDto.getAbout())
-//                .imageName(userDto.getImageName())
-//                .build();
-//        return user;
-
-        return mapper.map(userDto, User.class);
-
+        return userMapper.dtoToEntity(userDto);
     }
 }
