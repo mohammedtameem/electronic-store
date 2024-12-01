@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements  UserService {
@@ -41,27 +42,47 @@ public class UserServiceImpl implements  UserService {
 
     @Override
     public UserDto updateUser(UserDto userDto, String userId) {
-        return null;
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new RuntimeException("User with "+  userId + "not found"));
+        user.setName(userDto.getName());
+        user.setEmail(userDto.getEmail());
+        user.setPassword(userDto.getPassword());
+        user.setGender(userDto.getGender());
+        user.setImageName(userDto.getImageName());
+        user.setAbout(userDto.getAbout());
+
+        User updateUser = userRepository.save(user);
+        return entityToDTO(updateUser);
     }
 
     @Override
     public void deleteUser(String userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new RuntimeException("User with "+  userId + "not found"));
+        userRepository.delete(user);
+
+        //userRepository.deleteById(userId);
 
     }
 
     @Override
     public List<UserDto> getAllUser() {
-        return null;
+       return userRepository.findAll().stream().
+                 map(user -> entityToDTO(user)).collect(Collectors.toList());
     }
 
     @Override
     public UserDto getUserByEmail(String email) {
-        return null;
+      User user =  userRepository.findByEmail(email).orElseThrow(
+                () -> new RuntimeException("Email Not Found"));
+      return entityToDTO(user);
     }
 
     @Override
     public List<UserDto> searchUser(String keyword) {
-        return null;
+       List<User> users = userRepository.findByNameContaining(keyword);
+       return users.stream().map(user -> entityToDTO(user)).collect(Collectors.toList());
+
     }
 
 //     private UserDto entityToDTO(User user) {
