@@ -1,8 +1,11 @@
 package com.bytestream.services;
 
+import com.bytestream.config.UserMapper;
 import com.bytestream.dtos.UserDto;
 import com.bytestream.entities.User;
 import com.bytestream.repositories.UserRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +15,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImpl implements  UserService {
+public class UserServiceImpl implements UserService {
+
+    private static final Logger logger = LogManager.getLogger(UserServiceImpl.class);
+
+    private final UserMapper userMapper = UserMapper.INSTANCE;
 
     @Autowired
     private UserRepository userRepository;
@@ -22,8 +29,7 @@ public class UserServiceImpl implements  UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
-
-        // converting dto to entity object
+        logger.info("Creating a new user with details: {}", userDto);
 
         String userId = UUID.randomUUID().toString();
         userDto.setUserId(userId);
@@ -31,16 +37,19 @@ public class UserServiceImpl implements  UserService {
         User user = dtoToEntity(userDto);
         User savedUser = userRepository.save(user);
 
-        // converting entity to DTO
-
-        UserDto newDto = entityToDTO(savedUser);
-        return newDto;
+        logger.info("User created successfully with ID: {}", userId);
+        return entityToDTO(savedUser);
     }
 
     @Override
     public UserDto updateUser(UserDto userDto, String userId) {
+        logger.info("Updating user with ID: {}", userId);
+
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User with "+  userId + "not found"));
+                () -> {
+                    logger.error("User with ID: {} not found", userId);
+                    return new RuntimeException("User with " + userId + " not found");
+                });
         user.setName(userDto.getName());
         user.setEmail(userDto.getEmail());
         user.setPassword(userDto.getPassword());
@@ -48,69 +57,65 @@ public class UserServiceImpl implements  UserService {
         user.setImageName(userDto.getImageName());
         user.setAbout(userDto.getAbout());
 
-        User updateUser = userRepository.save(user);
-        return entityToDTO(updateUser);
+        User updatedUser = userRepository.save(user);
+
+        logger.info("User with ID: {} updated successfully", userId);
+        return entityToDTO(updatedUser);
     }
 
     @Override
     public void deleteUser(String userId) {
+        logger.warn("Deleting user with ID: {}", userId);
+
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User with "+  userId + "not found"));
+                () -> {
+                    logger.error("User with ID: {} not found", userId);
+                    return new RuntimeException("User with " + userId + " not found");
+                });
         userRepository.delete(user);
 
-        //userRepository.deleteById(userId);
-
+        logger.info("User with ID: {} deleted successfully", userId);
     }
 
     @Override
     public List<UserDto> getAllUser() {
-       return userRepository.findAll().stream().
-                 map(user -> entityToDTO(user)).collect(Collectors.toList());
+        logger.info("Fetching all users");
+
+        List<UserDto> userList = userRepository.findAll().stream()
+                .map(this::entityToDTO)
+                .collect(Collectors.toList());
+
+        logger.info("Total users fetched: {}", userList.size());
+        return userList;
     }
 
     @Override
     public UserDto getUserByEmail(String email) {
-      User user =  userRepository.findByEmail(email).orElseThrow(
-                () -> new RuntimeException("Email Not Found"));
-      return entityToDTO(user);
+        logger.info("Fetching user by email: {}", email);
+
+        User user = userRepository.findByEmail(email).orElseThrow(
+                () -> {
+                    logger.error("Email not found: {}", email);
+                    return new RuntimeException("Email Not Found");
+                });
+        return entityToDTO(user);
     }
 
     @Override
     public List<UserDto> searchUser(String keyword) {
-       List<User> users = userRepository.findByNameContaining(keyword);
-       return users.stream().map(user -> entityToDTO(user)).collect(Collectors.toList());
+        logger.info("Searching users with keyword: {}", keyword);
 
+        List<User> users = userRepository.findByNameContaining(keyword);
+
+        logger.info("Total users found with keyword '{}': {}", keyword, users.size());
+        return users.stream().map(this::entityToDTO).collect(Collectors.toList());
     }
 
     private UserDto entityToDTO(User user) {
-//        UserDto userDto = UserDto.builder()
-//                .userId(user.getUserId())
-//                .name(user.getName())
-//                .email(user.getEmail())
-//                .gender(user.getGender())
-//                .password(user.getPassword())
-//                .about(user.getAbout())
-//                .imageName(user.getImageName())
-//                .build();
-//        return userDto;
-
-        return mapper.map(user, UserDto.class);
-
+        return userMapper.entityToDTO(user);
     }
 
     private User dtoToEntity(UserDto userDto) {
-//        User user = User.builder()
-//                .userId(userDto.getUserId())
-//                .name(userDto.getName())
-//                .email(userDto.getEmail())
-//                .gender(userDto.getGender())
-//                .password(userDto.getPassword())
-//                .about(userDto.getAbout())
-//                .imageName(userDto.getImageName())
-//                .build();
-//        return user;
-
-        return mapper.map(userDto, User.class);
-
+        return userMapper.dtoToEntity(userDto);
     }
 }
